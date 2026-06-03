@@ -164,7 +164,7 @@ html, body {
 
 /* ✅ SELECTBOX */
 [data-baseweb="select"] * {
-    color: white !important;
+    color: black !important;
 }
 
 /* ✅ METRICAS */
