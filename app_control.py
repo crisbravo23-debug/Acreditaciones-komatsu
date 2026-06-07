@@ -698,7 +698,7 @@ if st.button("Generar QR masivo"):
 
             nombre = row["NOMBRE COMPLETO"]
 
-            url = f"{BASE_URL}?rut={rut}"
+            url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
 
             qr = generar_qr_komatsu(url, nombre)
 
