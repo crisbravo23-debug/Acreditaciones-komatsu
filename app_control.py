@@ -730,6 +730,7 @@ if st.button("Generar QR masivo"):
         mime="application/zip"
     )
 
+
 		
 
 
