@@ -293,11 +293,12 @@ import qrcode
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
-def generar_qr_komatsu(url, nombre):
+def generar_qr_personalizado(url):
 
-    # ✅ CREAR QR
+    # ✅ crear QR base
     qr = qrcode.QRCode(
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # alto para logo
         box_size=10,
         border=2,
     )
@@ -305,69 +306,46 @@ def generar_qr_komatsu(url, nombre):
     qr.add_data(url)
     qr.make(fit=True)
 
-    qr_img = qr.make_image(fill_color="#0A2A66", back_color="white").convert("RGB")
+    img = qr.make_image(fill_color="#0F3A7A", back_color="white").convert('RGB')
 
-    ancho, alto = qr_img.size
+    # ✅ dibujar texto en el centro
+    draw = ImageDraw.Draw(img)
 
-    # ✅ AGREGAR LOGO AL CENTRO
+    ancho, alto = img.size
+
+    texto = "KOMATSU RT"
+
+    # ✅ fuente (fallback si no tienes font)
     try:
-        logo = Image.open("komatsu_logo.png").convert("RGBA")
-
-        tamaño_logo = ancho // 4
-        logo = logo.resize((tamaño_logo, tamaño_logo))
-
-        pos = ((ancho - tamaño_logo)//2, (alto - tamaño_logo)//2)
-
-        qr_img.paste(logo, pos, mask=logo)
-
-    except:
-        pass  # si no hay logo, no rompe
-
-    # ✅ CREAR BASE EXTRA PARA NOMBRE
-    nueva_altura = alto + 80
-    final = Image.new("RGB", (ancho, nueva_altura), "white")
-    final.paste(qr_img, (0, 0))
-
-    draw = ImageDraw.Draw(final)
-
-    # ✅ NOMBRE ABAJO (AZUL + NEGRITA)
-    nombre = nombre.upper()
-
-    try:
-        font = ImageFont.truetype("arialbd.ttf", 26)  # negrita
+        font = ImageFont.truetype("arial.ttf", 28)
     except:
         font = ImageFont.load_default()
 
-    bbox = draw.textbbox((0, 0), nombre, font=font)
-    nw = bbox[2] - bbox[0]
+    # calcular posición centrada
+    bbox = draw.textbbox((0, 0), texto, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
 
-    x_nombre = (ancho - nw) // 2
+    pos_x = (ancho - text_width) // 2
+    pos_y = (alto - text_height) // 2
 
-    draw.text((x_nombre, alto + 20), nombre, fill="#0A2A66", font=font)
-
-    # ✅ CÍRCULO AZUL EXTERIOR
-    margen = 20
-    diametro = max(final.size) + margen
-
-    fondo = Image.new("RGB", (diametro, diametro), "white")
-    draw2 = ImageDraw.Draw(fondo)
-
-    # círculo
-    draw2.ellipse(
-        [0, 0, diametro, diametro],
-        outline="#0A2A66",
-        width=10
+    # ✅ fondo blanco para que se lea bien
+    padding = 10
+    draw.rectangle(
+        [
+            pos_x - padding,
+            pos_y - padding,
+            pos_x + text_width + padding,
+            pos_y + text_height + padding
+        ],
+        fill="white"
     )
 
-    # centrar QR dentro del círculo
-    x = (diametro - ancho) // 2
-    y = (diametro - nueva_altura) // 2
+    draw.text((pos_x, pos_y), texto, fill="#0F3A7A", font=font)
 
-    fondo.paste(final, (x, y))
-
-    # ✅ EXPORTAR
+    # ✅ guardar en buffer
     buffer = BytesIO()
-    fondo.save(buffer, format="PNG")
+    img.save(buffer, format="PNG")
     buffer.seek(0)
 
     return buffer
@@ -452,9 +430,9 @@ with st.container(border=True):
         BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
         url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
 
-        qr_img = generar_qr_komatsu(url_trabajador, trabajador)
-        st.image(qr_img, width=260)
-        st.image(qr_img, width=180)
+        qr_img = generar_qr_personalizado(url_trabajador)
+        st.image(qr_img, width=350)
+        
         
 st.download_button(
     label="⬇️ Descargar QR",
