@@ -693,9 +693,6 @@ if st.button("Generar QR masivo"):
 
         for _, row in df_matriz.iterrows():
 
-            rut_limpio = str(row["RUT"]).strip().replace(".", "").upper()
-            rut = formatear_rut(rut_limpio)
-
             nombre = row["NOMBRE COMPLETO"]
 
             url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
