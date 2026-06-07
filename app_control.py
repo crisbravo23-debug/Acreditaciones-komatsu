@@ -577,6 +577,37 @@ for hoja in xls.sheet_names:
         continue
 
 df_cert_excel = pd.DataFrame(certificados)
+st.subheader("📦 Descargar QR de todos los trabajadores")
+
+if st.button("Generar QR masivo"):
+
+    BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
+
+    zip_buffer = BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+
+        for _, row in df_matriz.iterrows():
+
+            rut = str(row["RUT"]).strip().replace(".", "").upper()
+            nombre = row["NOMBRE COMPLETO"]
+
+            url = f"{BASE_URL}?rut={rut}"
+
+            qr = generar_qr_personalizado(url, nombre)
+
+            nombre_archivo = f"{nombre}_{rut}.png".replace(" ", "_")
+
+            zip_file.writestr(nombre_archivo, qr.getvalue())
+
+    zip_buffer.seek(0)
+
+    st.download_button(
+        label="⬇️ Descargar todos los QR",
+        data=zip_buffer,
+        file_name="QR_Trabajadores_Komatsu.zip",
+        mime="application/zip"
+    )
 
 # ==============================
 # ✅ MOSTRAR
@@ -736,40 +767,6 @@ if st.button("Generar QR masivo"):
     )
         col2.write("✅ FORMACIÓN COMPLETADA")
 
-# ==============================
-# 📦 QR MASIVO
-# ==============================
-
-st.subheader("📦 Descargar QR de todos los trabajadores")
-
-if st.button("Generar QR masivo"):
-    BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
-
-    zip_buffer = BytesIO()
-
-    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-
-        for _, row in df_matriz.iterrows():
-
-            rut = str(row["RUT"]).replace(".", "").strip().upper()
-            nombre = row["NOMBRE COMPLETO"]
-
-            url = f"{BASE_URL}?rut={rut}"
-
-            qr = generar_qr_personalizado(url, nombre)
-
-            nombre_archivo = f"{nombre}_{rut}.png".replace(" ", "_")
-
-            zip_file.writestr(nombre_archivo, qr.getvalue())
-
-    zip_buffer.seek(0)
-
-    st.download_button(
-        label="⬇️ Descargar todos los QR",
-        data=zip_buffer,
-        file_name="QR_Trabajadores_Komatsu.zip",
-        mime="application/zip"
-    )
 
 
         
