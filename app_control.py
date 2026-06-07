@@ -455,43 +455,6 @@ st.download_button(
     file_name=f"QR_{rut_trabajador}.png",
     mime="image/png"
 )
-st.subheader("📦 Descargar QR de todos los trabajadores")
-
-if st.button("Generar QR masivo"):
-    
-    BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
-
-    # ✅ crear archivo ZIP temporal
-    zip_buffer = BytesIO()
-
-    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-
-        for _, row in df_matriz.iterrows():
-
-            rut = str(row["RUT"]).strip().replace(".", "").upper()
-            nombre = row["NOMBRE COMPLETO"]
-
-            # ✅ crear URL
-            url = f"{BASE_URL}?rut={rut}"
-
-            # ✅ generar QR personalizado
-            qr = generar_qr_personalizado(url, nombre)
-
-            # ✅ nombre archivo
-            nombre_archivo = f"{nombre}.png".replace(" ", "_")
-
-            # ✅ guardar en el ZIP
-            zip_file.writestr(nombre_archivo, qr.getvalue())
-
-    zip_buffer.seek(0)
-
-    # ✅ descargar ZIP
-    st.download_button(
-        label="⬇️ Descargar todos los QR",
-        data=zip_buffer,
-        file_name="QR_Trabajadores_Komatsu.zip",
-        mime="application/zip"
-    )
 # ==============================
 # ACREDITACIONES 
 # ==============================
@@ -733,5 +696,43 @@ with st.container(border=True):
         col1, col2, col3 = st.columns([5, 2, 2])
 
         col1.write(row["CURSO"])
+		
+		st.subheader("📦 Descargar QR de todos los trabajadores")
+
+if st.button("Generar QR masivo"):
+    
+    BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app/"
+
+    # ✅ crear archivo ZIP temporal
+    zip_buffer = BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+
+        for _, row in df_matriz.iterrows():
+
+            rut = str(row["RUT"]).strip().replace(".", "").upper()
+            nombre = row["NOMBRE COMPLETO"]
+
+            # ✅ crear URL
+            url = f"{BASE_URL}?rut={rut}"
+
+            # ✅ generar QR personalizado
+            qr = generar_qr_personalizado(url, nombre)
+
+            # ✅ nombre archivo
+            nombre_archivo = f"{nombre}.png".replace(" ", "_")
+
+            # ✅ guardar en el ZIP
+            zip_file.writestr(nombre_archivo, qr.getvalue())
+
+    zip_buffer.seek(0)
+
+    # ✅ descargar ZIP
+    st.download_button(
+        label="⬇️ Descargar todos los QR",
+        data=zip_buffer,
+        file_name="QR_Trabajadores_Komatsu.zip",
+        mime="application/zip"
+    )
         col2.write("✅ FORMACIÓN COMPLETADA")
         
