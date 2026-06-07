@@ -708,12 +708,14 @@ if st.button("Generar QR masivo"):
 
         for _, row in df_matriz.iterrows():
 
-            rut = str(row["RUT"]).strip().replace(".", "").upper()
+            rut_limpio = str(row["RUT"]).strip().replace(".", "").upper()
+            rut = formatear_rut(rut_limpio)
+
             nombre = row["NOMBRE COMPLETO"]
 
             url = f"{BASE_URL}?rut={rut}"
 
-            qr = generar_qr_personalizado(url, nombre)
+            qr = generar_qr_komatsu(url, nombre)
 
             nombre_archivo = f"{nombre}_{rut}.png".replace(" ", "_")
 
@@ -727,6 +729,7 @@ if st.button("Generar QR masivo"):
         file_name="QR_Trabajadores_Komatsu.zip",
         mime="application/zip"
     )
+
 		
 
 
