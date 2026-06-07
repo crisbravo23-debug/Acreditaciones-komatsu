@@ -735,6 +735,7 @@ if st.button("Generar QR masivo"):
         mime="application/zip"
     )
         col2.write("✅ FORMACIÓN COMPLETADA")
+
 st.subheader("📦 Descargar QR de todos los trabajadores")
 
 if st.button("Generar QR masivo"):
