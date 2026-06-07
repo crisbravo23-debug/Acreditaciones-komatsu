@@ -452,10 +452,10 @@ with st.container(border=True):
         BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
         url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
 
-       qr_img = generar_qr_komatsu(
-    url_trabajador,
-    trabajador
-)
+        qr_img = generar_qr_komatsu(
+            url_trabajador,
+            trabajador
+        )
 
 
         st.image(qr_img, width=180)
