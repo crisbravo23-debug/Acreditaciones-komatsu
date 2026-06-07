@@ -349,27 +349,6 @@ def generar_qr_personalizado(url):
     buffer.seek(0)
 
     return buffer
-	def generar_qr_komatsu(url, nombre):
-    import qrcode
-    from PIL import Image, ImageDraw, ImageFont
-    from io import BytesIO
-
-    qr = qrcode.QRCode(
-        error_correction=qrcode.constants.ERROR_CORRECT_H,
-        box_size=10,
-        border=2,
-    )
-
-    qr.add_data(url)
-    qr.make(fit=True)
-
-    qr_img = qr.make_image(fill_color="#0A2A66", back_color="white").convert("RGB")
-
-    buffer = BytesIO()
-    qr_img.save(buffer, format="PNG")
-    buffer.seek(0)
-
-    return buffer
 	
 # ==============================
 # SELECTOR
