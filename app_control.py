@@ -287,11 +287,75 @@ def mostrar_pdf(pdf_file):
 
     st.markdown(pdf_display, unsafe_allow_html=True)
 
-def generar_qr(url):
-    qr = qrcode.make(url)
+import qrcode
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 
+def generar_qr_personalizado(url, nombre):
+
+    # ✅ crear QR
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
+        box_size=10,
+        border=2,
+    )
+
+    qr.add_data(url)
+    qr.make(fit=True)
+
+    qr_img = qr.make_image(fill_color="#0F3A7A", back_color="white").convert("RGB")
+
+    ancho, alto = qr_img.size
+
+    # ✅ crear imagen más grande (para agregar nombre abajo)
+    nueva_altura = alto + 80
+    img_final = Image.new("RGB", (ancho, nueva_altura), "white")
+
+    img_final.paste(qr_img, (0, 0))
+
+    draw = ImageDraw.Draw(img_final)
+
+    # ✅ fuentes
+    try:
+        font_centro = ImageFont.truetype("arial.ttf", 28)
+        font_nombre = ImageFont.truetype("arial.ttf", 24)
+    except:
+        font_centro = ImageFont.load_default()
+        font_nombre = ImageFont.load_default()
+
+    # ✅ TEXTO CENTRO (KOMATSU RT)
+    texto = "KOMATSU RT"
+
+    bbox = draw.textbbox((0, 0), texto, font=font_centro)
+    tw = bbox[2] - bbox[0]
+    th = bbox[3] - bbox[1]
+
+    x = (ancho - tw) // 2
+    y = (alto - th) // 2
+
+    draw.rectangle(
+        [x-10, y-10, x+tw+10, y+th+10],
+        fill="white"
+    )
+
+    draw.text((x, y), texto, fill="#0F3A7A", font=font_centro)
+
+    # ✅ NOMBRE ABAJO
+    nombre = nombre.upper()
+
+    bbox2 = draw.textbbox((0, 0), nombre, font=font_nombre)
+    nw = bbox2[2] - bbox2[0]
+    nh = bbox2[3] - bbox2[1]
+
+    x_nombre = (ancho - nw) // 2
+    y_nombre = alto + 20
+
+    draw.text((x_nombre, y_nombre), nombre, fill="black", font=font_nombre)
+
+    # ✅ guardar
     buffer = BytesIO()
-    qr.save(buffer, format="PNG")
+    img_final.save(buffer, format="PNG")
     buffer.seek(0)
 
     return buffer
@@ -376,7 +440,10 @@ with st.container(border=True):
         BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
         url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
 
-        qr_img = generar_qr(url_trabajador)
+        qr_img = generar_qr_personalizado(
+    url_trabajador,
+    trabajador   # 👈 nombre del trabajador
+)
 
         st.image(qr_img, width=180)
 
