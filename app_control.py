@@ -468,7 +468,7 @@ with st.container(border=True):
 
     st.subheader("📄 Certificados Legales")
 
-archivo_cert = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\Escritorio\Control Acreditaciones Komatsu RT\Certificados legales.xlsx"
+archivo_cert ="Certificados legales.xlsx"
 
 xls = pd.ExcelFile(archivo_cert)
 
@@ -538,7 +538,7 @@ with st.container(border=True):
 
     st.subheader("📄 Operación de equipos")
 
-archivo_cert = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\Escritorio\Control Acreditaciones Komatsu RT\Operación equipos.xlsx"
+archivo_cert ="Operación equipos.xlsx"
 
 xls = pd.ExcelFile(archivo_cert)
 
