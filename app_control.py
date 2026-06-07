@@ -251,6 +251,7 @@ def dato(df, col):
         val = df[col].iloc[0]
         return val if pd.notna(val) else "Sin dato"
     return "Sin dato"
+	
 def obtener_foto(rut):
 
     carpeta = "fotos"
@@ -260,12 +261,10 @@ def obtener_foto(rut):
 
     rut = str(rut).strip()
 
-    # limpiar formato (opcional pero recomendado)
-    rut = rut.replace(".", "").replace(" ", "")
-
     extensiones = [".jpg", ".jpeg", ".png"]
 
     for ext in extensiones:
+
         ruta = os.path.join(carpeta, rut + ext)
 
         if os.path.exists(ruta):
