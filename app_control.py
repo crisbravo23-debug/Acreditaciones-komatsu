@@ -289,8 +289,6 @@ def mostrar_pdf(pdf_file):
 
     st.markdown(pdf_display, unsafe_allow_html=True)
 
-def generar_qr_komatsu(url, nombre):
-
     import qrcode
     from PIL import Image, ImageDraw, ImageFont
     from io import BytesIO
