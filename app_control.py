@@ -313,13 +313,45 @@ def generar_qr_personalizado(url):
 
     ancho, alto = img.size
 
-    texto = "KOMATSU RT"
+    # ----------------------
+    # LOGO KOMATSU
+    # ----------------------
 
-    # ✅ fuente (fallback si no tienes font)
-    try:
-        font = ImageFont.truetype("arial.ttf", 28)
-    except:
-        font = ImageFont.load_default()
+    logo_resized = logo.copy()
+
+    ancho_logo = 700
+
+    alto_logo = int(
+        logo.height *
+        ancho_logo /
+        logo.width
+    )
+
+    logo_resized = logo_resized.resize(
+        (ancho_logo, alto_logo),
+        Image.Resampling.LANCZOS
+    )
+
+    fondo_logo = Image.new(
+        "RGBA",
+        (760, alto_logo + 40),
+        (255, 255, 255, 255)
+    )
+
+    fondo_logo.paste(
+        logo_resized,
+        (30, 20),
+        logo_resized
+    )
+
+    pos_x = (RADIO_LIENZO - fondo_logo.width) // 2
+    pos_y = 930
+
+    canvas.paste(
+        fondo_logo,
+        (pos_x, pos_y),
+        fondo_logo
+    )
 
     # calcular posición centrada
     bbox = draw.textbbox((0, 0), texto, font=font)
