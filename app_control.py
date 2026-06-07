@@ -359,6 +359,12 @@ def generar_qr_personalizado(url, nombre):
     buffer.seek(0)
 
     return buffer
+	st.download_button(
+    label="⬇️ Descargar QR",
+    data=qr_img,
+    file_name=f"QR_{rut_trabajador}.png",
+    mime="image/png"
+)
 
 # ==============================
 # SELECTOR
