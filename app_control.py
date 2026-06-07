@@ -350,6 +350,16 @@ def generar_qr_personalizado(url):
 
     return buffer
 	
+	def formatear_rut(rut):
+    rut = str(rut).replace(".", "").strip().upper()
+
+    cuerpo = rut[:-2]
+    dv = rut[-1]
+
+    cuerpo_formateado = "{:,}".format(int(cuerpo)).replace(",", ".")
+
+    return f"{cuerpo_formateado}-{dv}"
+	
 # ==============================
 # SELECTOR
 # ==============================
@@ -429,7 +439,7 @@ with st.container(border=True):
     with col3:
         BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
         url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
-
+        
         qr_img = generar_qr_personalizado(url_trabajador)
         st.image(qr_img, width=350)
         
@@ -693,13 +703,17 @@ if st.button("Generar QR masivo"):
 
         for _, row in df_matriz.iterrows():
 
+            rut_limpio = str(row["RUT"]).strip().replace(".", "").upper()
+            rut_formateado = formatear_rut(rut_limpio)
+
             nombre = row["NOMBRE COMPLETO"]
 
-            url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
+            # ✅ URL con puntos
+            url = f"{BASE_URL}?rut={rut_formateado}"
 
-            qr = generar_qr_komatsu(url, nombre)
+            qr = generar_qr_personalizado(url)
 
-            nombre_archivo = f"{nombre}_{rut}.png".replace(" ", "_")
+            nombre_archivo = f"{nombre}_{rut_formateado}.png".replace(" ", "_")
 
             zip_file.writestr(nombre_archivo, qr.getvalue())
 
@@ -711,7 +725,6 @@ if st.button("Generar QR masivo"):
         file_name="QR_Trabajadores_Komatsu.zip",
         mime="application/zip"
     )
-
 
 		
 
