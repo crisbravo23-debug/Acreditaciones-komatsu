@@ -362,6 +362,16 @@ def generar_qr_personalizado(url, nombre):
 
     return buffer
 	
+def formatear_rut(rut):
+    rut = str(rut).replace(".", "").strip().upper()
+
+    cuerpo = rut[:-2]
+    dv = rut[-1]
+
+    cuerpo_formateado = "{:,}".format(int(cuerpo)).replace(",", ".")
+
+    return f"{cuerpo_formateado}-{dv}"
+	
 # ==============================
 # SELECTOR
 # ==============================
