@@ -1,9 +1,12 @@
+
 import streamlit as st
 import pandas as pd
 import os
 import webbrowser
 import base64
 from datetime import datetime
+import qrcode
+from io import BytesIO
 
 st.set_page_config(layout="wide")
 # ==============================
@@ -164,7 +167,7 @@ html, body {
 
 /* ✅ SELECTBOX */
 [data-baseweb="select"] * {
-    color: black !important;
+    color: white !important;
 }
 
 /* ✅ METRICAS */
@@ -229,13 +232,18 @@ df.columns = df.columns.str.upper()
 def estado(fecha):
     if pd.isna(fecha):
         return "—"
+
     fecha = pd.to_datetime(fecha)
     hoy = datetime.now()
 
     if fecha < hoy:
         return "🔴 VENCIDO"
-    elif (fecha - hoy).days <= 30:
+
+    dias_restantes = (fecha - hoy).days
+
+    if dias_restantes <= 45:
         return "🟡 POR VENCER"
+
     return "🟢 VIGENTE"
 
 def dato(df, col):
@@ -277,18 +285,47 @@ def mostrar_pdf(pdf_file):
     """
 
     st.markdown(pdf_display, unsafe_allow_html=True)
+
+def generar_qr(url):
+    qr = qrcode.make(url)
+
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return buffer
+
 # ==============================
 # SELECTOR
 # ==============================
-trabajador = st.selectbox(
-    "Seleccionar trabajador",
-    sorted(df_matriz["NOMBRE COMPLETO"].unique())
-)
+
+query_params = st.query_params
+rut_url = query_params.get("rut", None)
+
+lista_trabajadores = sorted(df_matriz["NOMBRE COMPLETO"].unique())
+
+trabajador_qr = None
+
+if rut_url:
+    fila = df_matriz[df_matriz["RUT"].astype(str).str.strip() == str(rut_url)]
+    if not fila.empty:
+        trabajador_qr = fila["NOMBRE COMPLETO"].iloc[0]
+
+if trabajador_qr:
+    trabajador = st.selectbox(
+        "Seleccionar trabajador",
+        lista_trabajadores,
+        index=lista_trabajadores.index(trabajador_qr)
+    )
+else:
+    trabajador = st.selectbox("Seleccionar trabajador", lista_trabajadores)
 
 trabajador_clean = trabajador.strip().upper()
 
 df_persona = df_matriz[df_matriz["NOMBRE COMPLETO"] == trabajador_clean]
 df_trab = df[df["TRABAJADOR"].str.upper() == trabajador_clean]
+
+rut_trabajador = str(dato(df_persona, "RUT")).strip()
 
 # ==============================
 # 📊 RESUMEN
@@ -313,79 +350,252 @@ with st.container(border=True):
 
 	st.subheader("👤 Perfil del Trabajador")
 
+
 with st.container(border=True):
 
-    col1, col2 = st.columns([1.2, 6])
+    col1, col2, col3 = st.columns([1.5, 4, 1.5])
 
-    rut_trabajador = dato(df_persona, "RUT")
-    foto = obtener_foto(rut_trabajador)
-  
+    # 🔹 FOTO
     with col1:
+        foto = obtener_foto(rut_trabajador)
         if foto:
             st.image(foto, width=200)
- 
+
+    # 🔹 DATOS
     with col2:
         st.write(f"## {trabajador}")
-        st.write(f"📇Rut: {dato(df_persona,'RUT')}")
-        st.write(f"💼Cargo: {dato(df_persona,'CARGO')}")
-        st.write(f"🏢Empresa: {dato(df_persona,'EMPRESA')}")
-        st.write(f"🪪Licencia: {dato(df_persona,'LICENCIA')}")
-        st.write(f"📧Correo: {dato(df_persona,'E-MAIL')}")
+        st.write(f"📇 Rut: {dato(df_persona,'RUT')}")
+        st.write(f"💼 Cargo: {dato(df_persona,'CARGO')}")
+        st.write(f"🏢 Empresa: {dato(df_persona,'EMPRESA')}")
+        st.write(f"🪪 Licencia: {dato(df_persona,'LICENCIA')}")
+        st.write(f"📧 Correo: {dato(df_persona,'E-MAIL')}")
+
+    # 🔹 QR A LA DERECHA
+    with col3:
+        BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
+        url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
+
+        qr_img = generar_qr(url_trabajador)
+
+        st.image(qr_img, width=180)
+
 
 # ==============================
-# 1. CERTIFICADOS
+# ACREDITACIONES 
+# ==============================
+
+# 🔹 cargar hoja
+xls = pd.ExcelFile(ARCHIVO_MATRIZ)
+
+# 🔍 detectar hoja automáticamente
+sheet_acred = None
+for hoja in xls.sheet_names:
+    if "ACREDIT" in hoja.upper():
+        sheet_acred = hoja
+        break
+
+# ✅ validar
+if sheet_acred is None:
+    st.error("❌ No se encontró hoja de ACREDITACIONES")
+else:
+    df_acred = pd.read_excel(ARCHIVO_MATRIZ, sheet_name=sheet_acred)
+df_acred.columns = df_acred.columns.str.strip().str.upper()
+
+# 🔹 obtener rut y nombre
+rut_trabajador = str(dato(df_persona, "RUT")).strip()
+nombre_trabajador = trabajador_clean
+
+# 🔹 buscar por RUT (columna A)
+df_acred_trab = df_acred[
+    df_acred.iloc[:, 0].astype(str).str.strip() == rut_trabajador
+]
+
+# 🔹 si no encuentra, buscar por nombre (columna B)
+if df_acred_trab.empty:
+    df_acred_trab = df_acred[
+        df_acred.iloc[:, 1].astype(str).str.upper().str.strip() == nombre_trabajador
+    ]
+
+# 🔹 tomar columnas desde D en adelante
+df_acred_filtrado = df_acred_trab.iloc[:, 3:]
+
+# 🔹 transformar columnas a filas
+acreditaciones = []
+
+if not df_acred_filtrado.empty:
+    for col in df_acred_filtrado.columns:
+
+        valor = df_acred_filtrado[col].iloc[0]
+
+        if pd.notna(valor):
+            acreditaciones.append({
+                "CURSO": col,
+                "VENCIMIENTO": valor
+            })
+
+df_acreditaciones = pd.DataFrame(acreditaciones)
+
+# ==============================
+# MOSTRAR EN APP
+# ==============================
+with st.container(border=True):
+
+    st.subheader("📋 Acreditaciones")
+
+with st.container(border=True):
+
+    col1, col2, col3 = st.columns([2,1,2])
+    col1.markdown("**ACREDITACIONES**")
+    col2.markdown("**VENCIMIENTO**")
+    col3.markdown("**ESTADO**")
+
+with st.container(border=True):
+
+    for i, row in df_acreditaciones.iterrows():
+
+        col1, col2, col3 = st.columns([2,1,2])
+
+        fecha = pd.to_datetime(row["VENCIMIENTO"])
+
+        col1.write(row["CURSO"])
+        col2.write(fecha.strftime("%d-%m-%Y"))
+        col3.write(estado(fecha))
+
+# ==============================
+# ✅ CERTIFICADOS
 # ==============================
 with st.container(border=True):
 
     st.subheader("📄 Certificados Legales")
 
+archivo_cert = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\Escritorio\Control Acreditaciones Komatsu RT\Certificados legales.xlsx"
+
+xls = pd.ExcelFile(archivo_cert)
+
+certificados = []
+
+for hoja in xls.sheet_names:
+
+    try:
+        df_hoja = pd.read_excel(archivo_cert, sheet_name=hoja)
+
+        # validar que tenga al menos 4 columnas
+        if df_hoja.shape[1] < 4:
+            continue
+
+        # buscar por RUT en columna A (index 0)
+        df_trab_hoja = df_hoja[
+            df_hoja.iloc[:, 0].astype(str).str.strip() == str(rut_trabajador)
+        ]
+
+        if not df_trab_hoja.empty:
+
+            fecha = df_trab_hoja.iloc[0, 3]  # columna D
+
+            if pd.notna(fecha):
+                certificados.append({
+                    "CURSO": hoja,
+                    "VENCIMIENTO": fecha
+                })
+
+    except:
+        continue
+
+df_cert_excel = pd.DataFrame(certificados)
+
+# ==============================
+# ✅ MOSTRAR
+# ==============================
+with st.container(border=True):
+    if df_cert_excel.empty:
+        st.warning("⚠️ Sin certificados encontrados")
+    else:
+        col1, col2, col3 = st.columns([4,2,2])
+
+        col1.markdown("**CURSO**")
+        col2.markdown("**VENCIMIENTO**")
+        col3.markdown("**ESTADO**")
+
 with st.container(border=True):
 
-    col1, col2, col3, col4 = st.columns([4,2,2,2])
-    col1.markdown("**CURSO**")
-    col2.markdown("**VENCIMIENTO**")
-    col3.markdown("**ESTADO**")
-    
+    for _, row in df_cert_excel.iterrows():
 
-with st.container(border=True):
+        col1, col2, col3 = st.columns([4,2,2])
 
-    for i, row in df_trab[df_trab["TIPO"] == "CERTIFICACION"].iterrows():
+        fecha = pd.to_datetime(row["VENCIMIENTO"], errors="coerce")
 
-        col1, col2, col3, col4 = st.columns([4, 2, 2, 2])
+        if pd.isna(fecha):
+            continue
 
         col1.write(row["CURSO"])
-        col2.write(str(row["VENCIMIENTO"])[:10])
-        col3.write(estado(row["VENCIMIENTO"]))
+        col2.write(fecha.strftime("%d-%m-%Y"))
+        col3.write(estado(fecha))
 
 # ==============================
 # 2. OPERACION EQUIPO (TODOS)
 # ==============================
 with st.container(border=True):
 
-	st.subheader("🚜 Operación de Equipos")
+    st.subheader("📄 Operación de equipos")
+
+archivo_cert = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\Escritorio\Control Acreditaciones Komatsu RT\Operación equipos.xlsx"
+
+xls = pd.ExcelFile(archivo_cert)
+
+certificados = []
+
+for hoja in xls.sheet_names:
+
+    try:
+        df_hoja = pd.read_excel(archivo_cert, sheet_name=hoja)
+
+        # validar que tenga al menos 4 columnas
+        if df_hoja.shape[1] < 4:
+            continue
+
+        # buscar por RUT en columna A (index 0)
+        df_trab_hoja = df_hoja[
+            df_hoja.iloc[:, 0].astype(str).str.strip() == str(rut_trabajador)
+        ]
+
+        if not df_trab_hoja.empty:
+
+            fecha = df_trab_hoja.iloc[0, 3]  # columna D
+
+            if pd.notna(fecha):
+                certificados.append({
+                    "CURSO": hoja,
+                    "VENCIMIENTO": fecha
+                })
+
+    except:
+        continue
+
+df_cert_excel = pd.DataFrame(certificados)
+
+# ==============================
+# ✅ MOSTRAR
+# ==============================
+with st.container(border=True):
+    if df_cert_excel.empty:
+        st.warning("⚠️ Sin certificados encontrados")
+    else:
+        col1, col2, col3 = st.columns([4,2,2])
+
+        col1.markdown("**CURSO**")
+        col2.markdown("**VENCIMIENTO**")
+        col3.markdown("**ESTADO**")
 
 with st.container(border=True):
 
-    col1, col2, col3, col4 = st.columns([4,2,2,2])
-    col1.markdown("**CURSO**")
-    col2.markdown("**VENCIMIENTO**")
-    col3.markdown("**ESTADO**")
+    for _, row in df_cert_excel.iterrows():
 
-with st.container(border=True):
+        col1, col2, col3 = st.columns([4,2,2])
 
-    df_op = df_trab[
-        df_trab["TIPO"]
-        .astype(str)
-        .str.upper()
-        .str.replace("Ó", "O")
-        .str.contains("OPERACION", na=False)
-    ]
+        fecha = pd.to_datetime(row["VENCIMIENTO"], errors="coerce")
 
-    for i, row in df_op.iterrows():
-
-        col1, col2, col3, col4 = st.columns([4,2,2,2])
-
-        fecha = pd.to_datetime(row["VENCIMIENTO"])
+        if pd.isna(fecha):
+            continue
 
         col1.write(row["CURSO"])
         col2.write(fecha.strftime("%d-%m-%Y"))
@@ -411,7 +621,5 @@ with st.container(border=True):
         col1, col2, col3 = st.columns([5, 2, 2])
 
         col1.write(row["CURSO"])
-        col2.write("🎓 FORMACIÓN COMPLETADA")
-
-
-
+        col2.write("✅ FORMACIÓN COMPLETADA")
+        
