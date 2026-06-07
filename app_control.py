@@ -289,10 +289,13 @@ def mostrar_pdf(pdf_file):
 
     st.markdown(pdf_display, unsafe_allow_html=True)
 
-    import qrcode
-    from PIL import Image, ImageDraw, ImageFont
-    from io import BytesIO
+import qrcode
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 
+def generar_qr_komatsu(url, nombre):
+
+    # ✅ CREAR QR
     qr = qrcode.QRCode(
         error_correction=qrcode.constants.ERROR_CORRECT_H,
         box_size=10,
@@ -306,28 +309,32 @@ def mostrar_pdf(pdf_file):
 
     ancho, alto = qr_img.size
 
-    # ✅ LOGO CENTRO (opcional)
+    # ✅ AGREGAR LOGO AL CENTRO
     try:
         logo = Image.open("komatsu_logo.png").convert("RGBA")
+
         tamaño_logo = ancho // 4
         logo = logo.resize((tamaño_logo, tamaño_logo))
 
         pos = ((ancho - tamaño_logo)//2, (alto - tamaño_logo)//2)
-        qr_img.paste(logo, pos, mask=logo)
-    except:
-        pass
 
-    # ✅ BASE FINAL
+        qr_img.paste(logo, pos, mask=logo)
+
+    except:
+        pass  # si no hay logo, no rompe
+
+    # ✅ CREAR BASE EXTRA PARA NOMBRE
     nueva_altura = alto + 80
     final = Image.new("RGB", (ancho, nueva_altura), "white")
     final.paste(qr_img, (0, 0))
 
     draw = ImageDraw.Draw(final)
 
+    # ✅ NOMBRE ABAJO (AZUL + NEGRITA)
     nombre = nombre.upper()
 
     try:
-        font = ImageFont.truetype("arialbd.ttf", 26)
+        font = ImageFont.truetype("arialbd.ttf", 26)  # negrita
     except:
         font = ImageFont.load_default()
 
@@ -338,39 +345,32 @@ def mostrar_pdf(pdf_file):
 
     draw.text((x_nombre, alto + 20), nombre, fill="#0A2A66", font=font)
 
-    # ✅ CÍRCULO EXTERIOR
+    # ✅ CÍRCULO AZUL EXTERIOR
     margen = 20
     diametro = max(final.size) + margen
 
     fondo = Image.new("RGB", (diametro, diametro), "white")
     draw2 = ImageDraw.Draw(fondo)
 
+    # círculo
     draw2.ellipse(
         [0, 0, diametro, diametro],
         outline="#0A2A66",
         width=10
     )
 
+    # centrar QR dentro del círculo
     x = (diametro - ancho) // 2
     y = (diametro - nueva_altura) // 2
 
     fondo.paste(final, (x, y))
 
+    # ✅ EXPORTAR
     buffer = BytesIO()
     fondo.save(buffer, format="PNG")
     buffer.seek(0)
 
     return buffer
-	
-def formatear_rut(rut):
-    rut = str(rut).replace(".", "").strip().upper()
-
-    cuerpo = rut[:-2]
-    dv = rut[-1]
-
-    cuerpo_formateado = "{:,}".format(int(cuerpo)).replace(",", ".")
-
-    return f"{cuerpo_formateado}-{dv}"
 	
 # ==============================
 # SELECTOR
@@ -452,11 +452,8 @@ with st.container(border=True):
         BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
         url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
 
-        qr_img = generar_qr_personalizado(
-            url_trabajador,
-            trabajador   # 👈 nombre del trabajador
-        )
-
+        qr_img = generar_qr_komatsu(url_trabajador, trabajador)
+        st.image(qr_img, width=260)
         st.image(qr_img, width=180)
         
 st.download_button(
