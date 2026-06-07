@@ -736,41 +736,41 @@ if st.button("Generar QR masivo"):
     )
         col2.write("✅ FORMACIÓN COMPLETADA")
 
+# ==============================
+# 📦 QR MASIVO
+# ==============================
+
 st.subheader("📦 Descargar QR de todos los trabajadores")
 
-    if st.button("Generar QR masivo"):
-    
-        BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
+if st.button("Generar QR masivo"):
 
-        # ✅ crear archivo ZIP temporal
-        zip_buffer = BytesIO()
+    BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
 
-        with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+    zip_buffer = BytesIO()
 
-            for _, row in df_matriz.iterrows():
+    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
 
-                rut = str(row["RUT"]).strip().replace(".", "").upper()
-                nombre = row["NOMBRE COMPLETO"]
+        for _, row in df_matriz.iterrows():
 
-                # ✅ crear URL
-                url = f"{BASE_URL}?rut={rut}"
+            rut = str(row["RUT"]).replace(".", "").strip().upper()
+            nombre = row["NOMBRE COMPLETO"]
 
-                # ✅ generar QR personalizado
-                qr = generar_qr_personalizado(url, nombre)
+            url = f"{BASE_URL}?rut={rut}"
 
-                # ✅ nombre archivo
-                nombre_archivo = f"{nombre}.png".replace(" ", "_")
+            qr = generar_qr_personalizado(url, nombre)
 
-                # ✅ guardar en el ZIP
-                zip_file.writestr(nombre_archivo, qr.getvalue())
+            nombre_archivo = f"{nombre}_{rut}.png".replace(" ", "_")
 
-        zip_buffer.seek(0)
+            zip_file.writestr(nombre_archivo, qr.getvalue())
 
-        # ✅ descargar ZIP
-        st.download_button(
-            label="⬇️ Descargar todos los QR",
-            data=zip_buffer,
-            file_name="QR_Trabajadores_Komatsu.zip",
-            mime="application/zip"
-        )
+    zip_buffer.seek(0)
+
+    st.download_button(
+        label="⬇️ Descargar todos los QR",
+        data=zip_buffer,
+        file_name="QR_Trabajadores_Komatsu.zip",
+        mime="application/zip"
+    )
+
+
         
