@@ -743,7 +743,6 @@ if st.button("Generar QR masivo"):
 st.subheader("📦 Descargar QR de todos los trabajadores")
 
 if st.button("Generar QR masivo"):
-
     BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
 
     zip_buffer = BytesIO()
