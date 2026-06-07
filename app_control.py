@@ -293,11 +293,10 @@ import qrcode
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
-def generar_qr_personalizado(url, nombre):
+def generar_qr_komatsu(url, nombre):
 
-    # ✅ crear QR
+    # ✅ CREAR QR
     qr = qrcode.QRCode(
-        version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_H,
         box_size=10,
         border=2,
@@ -306,58 +305,69 @@ def generar_qr_personalizado(url, nombre):
     qr.add_data(url)
     qr.make(fit=True)
 
-    qr_img = qr.make_image(fill_color="#0F3A7A", back_color="white").convert("RGB")
+    qr_img = qr.make_image(fill_color="#0A2A66", back_color="white").convert("RGB")
 
     ancho, alto = qr_img.size
 
-    # ✅ crear imagen más grande (para agregar nombre abajo)
-    nueva_altura = alto + 80
-    img_final = Image.new("RGB", (ancho, nueva_altura), "white")
-
-    img_final.paste(qr_img, (0, 0))
-
-    draw = ImageDraw.Draw(img_final)
-
-    # ✅ fuentes
+    # ✅ AGREGAR LOGO AL CENTRO
     try:
-        font_centro = ImageFont.truetype("arial.ttf", 200)
-        font_nombre = ImageFont.truetype("arial.ttf", 200)
+        logo = Image.open("komatsu.png").convert("RGBA")
+
+        tamaño_logo = ancho // 4
+        logo = logo.resize((tamaño_logo, tamaño_logo))
+
+        pos = ((ancho - tamaño_logo)//2, (alto - tamaño_logo)//2)
+
+        qr_img.paste(logo, pos, mask=logo)
+
     except:
-        font_centro = ImageFont.load_default()
-        font_nombre = ImageFont.load_default()
+        pass  # si no hay logo, no rompe
 
-    # ✅ TEXTO CENTRO (KOMATSU RT)
-    texto = "KOMATSU RT"
+    # ✅ CREAR BASE EXTRA PARA NOMBRE
+    nueva_altura = alto + 80
+    final = Image.new("RGB", (ancho, nueva_altura), "white")
+    final.paste(qr_img, (0, 0))
 
-    bbox = draw.textbbox((0, 0), texto, font=font_centro)
-    tw = bbox[2] - bbox[0]
-    th = bbox[3] - bbox[1]
+    draw = ImageDraw.Draw(final)
 
-    x = (ancho - tw) // 2
-    y = (alto - th) // 2
-
-    draw.rectangle(
-        [x-10, y-10, x+tw+10, y+th+10],
-        fill="white"
-    )
-
-    draw.text((x, y), texto, fill="#0F3A7A", font=font_centro)
-
-    # ✅ NOMBRE ABAJO
+    # ✅ NOMBRE ABAJO (AZUL + NEGRITA)
     nombre = nombre.upper()
 
-    bbox2 = draw.textbbox((0, 0), nombre, font=font_nombre)
-    nw = bbox2[2] - bbox2[0]
-    nh = bbox2[3] - bbox2[1]
+    try:
+        font = ImageFont.truetype("arialbd.ttf", 26)  # negrita
+    except:
+        font = ImageFont.load_default()
+
+    bbox = draw.textbbox((0, 0), nombre, font=font)
+    nw = bbox[2] - bbox[0]
 
     x_nombre = (ancho - nw) // 2
-    y_nombre = alto + 20
 
-    draw.text((x_nombre, y_nombre), nombre, fill="black", font=font_nombre)
+    draw.text((x_nombre, alto + 20), nombre, fill="#0A2A66", font=font)
 
-    # ✅ guardar
+    # ✅ CÍRCULO AZUL EXTERIOR
+    margen = 20
+    diametro = max(final.size) + margen
+
+    fondo = Image.new("RGB", (diametro, diametro), "white")
+    draw2 = ImageDraw.Draw(fondo)
+
+    # círculo
+    draw2.ellipse(
+        [0, 0, diametro, diametro],
+        outline="#0A2A66",
+        width=10
+    )
+
+    # centrar QR dentro del círculo
+    x = (diametro - ancho) // 2
+    y = (diametro - nueva_altura) // 2
+
+    fondo.paste(final, (x, y))
+
+    # ✅ EXPORTAR
     buffer = BytesIO()
-    img_final.save(buffer, format="PNG")
+    fondo.save(buffer, format="PNG")
     buffer.seek(0)
 
     return buffer
