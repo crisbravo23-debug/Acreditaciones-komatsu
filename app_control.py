@@ -318,8 +318,8 @@ def generar_qr_personalizado(url, nombre):
 
     # ✅ fuentes
     try:
-        font_centro = ImageFont.truetype("arial.ttf", 50)
-        font_nombre = ImageFont.truetype("arial.ttf", 50)
+        font_centro = ImageFont.truetype("arial.ttf", 200)
+        font_nombre = ImageFont.truetype("arial.ttf", 200)
     except:
         font_centro = ImageFont.load_default()
         font_nombre = ImageFont.load_default()
