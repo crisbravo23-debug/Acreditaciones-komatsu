@@ -350,7 +350,7 @@ def generar_qr_personalizado(url):
 
     return buffer
 	
-	def formatear_rut(rut):
+def formatear_rut(rut):
     rut = str(rut).replace(".", "").strip().upper()
 
     cuerpo = rut[:-2]
