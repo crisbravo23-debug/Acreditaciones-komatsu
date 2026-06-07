@@ -373,7 +373,7 @@ with st.container(border=True):
 
     # 🔹 QR A LA DERECHA
     with col3:
-        BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
+        BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
         url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
 
         qr_img = generar_qr(url_trabajador)
