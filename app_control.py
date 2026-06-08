@@ -7,8 +7,6 @@ import base64
 from datetime import datetime
 import qrcode
 from io import BytesIO
-import zipfile
-import tempfile
 
 st.set_page_config(layout="wide")
 # ==============================
@@ -253,7 +251,6 @@ def dato(df, col):
         val = df[col].iloc[0]
         return val if pd.notna(val) else "Sin dato"
     return "Sin dato"
-	
 def obtener_foto(rut):
 
     carpeta = "fotos"
@@ -289,109 +286,15 @@ def mostrar_pdf(pdf_file):
 
     st.markdown(pdf_display, unsafe_allow_html=True)
 
-import qrcode
-from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
+def generar_qr(url):
+    qr = qrcode.make(url)
 
-def generar_qr_personalizado(url):
-
-    # ✅ crear QR base
-    qr = qrcode.QRCode(
-        version=None,
-        error_correction=qrcode.constants.ERROR_CORRECT_H,  # alto para logo
-        box_size=10,
-        border=2,
-    )
-
-    qr.add_data(url)
-    qr.make(fit=True)
-
-    img = qr.make_image(fill_color="#0F3A7A", back_color="white").convert('RGB')
-
-    # ✅ dibujar texto en el centro
-    draw = ImageDraw.Draw(img)
-
-    ancho, alto = img.size
-
-    # ----------------------
-    # LOGO KOMATSU
-    # ----------------------
-
-    logo_resized = logo.copy()
-
-    ancho_logo = 700
-
-    alto_logo = int(
-        logo.height *
-        ancho_logo /
-        logo.width
-    )
-
-    logo_resized = logo_resized.resize(
-        (ancho_logo, alto_logo),
-        Image.Resampling.LANCZOS
-    )
-
-    fondo_logo = Image.new(
-        "RGBA",
-        (760, alto_logo + 40),
-        (255, 255, 255, 255)
-    )
-
-    fondo_logo.paste(
-        logo_resized,
-        (30, 20),
-        logo_resized
-    )
-
-    pos_x = (RADIO_LIENZO - fondo_logo.width) // 2
-    pos_y = 930
-
-    canvas.paste(
-        fondo_logo,
-        (pos_x, pos_y),
-        fondo_logo
-    )
-
-    # calcular posición centrada
-    bbox = draw.textbbox((0, 0), texto, font=font)
-    text_width = bbox[2] - bbox[0]
-    text_height = bbox[3] - bbox[1]
-
-    pos_x = (ancho - text_width) // 2
-    pos_y = (alto - text_height) // 2
-
-    # ✅ fondo blanco para que se lea bien
-    padding = 10
-    draw.rectangle(
-        [
-            pos_x - padding,
-            pos_y - padding,
-            pos_x + text_width + padding,
-            pos_y + text_height + padding
-        ],
-        fill="white"
-    )
-
-    draw.text((pos_x, pos_y), texto, fill="#0F3A7A", font=font)
-
-    # ✅ guardar en buffer
     buffer = BytesIO()
-    img.save(buffer, format="PNG")
+    qr.save(buffer, format="PNG")
     buffer.seek(0)
 
     return buffer
-	
-def formatear_rut(rut):
-    rut = str(rut).replace(".", "").strip().upper()
 
-    cuerpo = rut[:-2]
-    dv = rut[-1]
-
-    cuerpo_formateado = "{:,}".format(int(cuerpo)).replace(",", ".")
-
-    return f"{cuerpo_formateado}-{dv}"
-	
 # ==============================
 # SELECTOR
 # ==============================
@@ -469,19 +372,14 @@ with st.container(border=True):
 
     # 🔹 QR A LA DERECHA
     with col3:
-        BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
+        BASE_URL = "https://acreditaciones-komatsu-q32swdvybciqekug6s9y8c.streamlit.app"
         url_trabajador = f"{BASE_URL}?rut={rut_trabajador}"
-        
-        qr_img = generar_qr_personalizado(url_trabajador)
-        st.image(qr_img, width=350)
-        
-        
-st.download_button(
-    label="⬇️ Descargar QR",
-    data=qr_img,
-    file_name=f"QR_{rut_trabajador}.png",
-    mime="image/png"
-)
+
+        qr_img = generar_qr(url_trabajador)
+
+        st.image(qr_img, width=180)
+
+
 # ==============================
 # ACREDITACIONES 
 # ==============================
@@ -570,7 +468,7 @@ with st.container(border=True):
 
     st.subheader("📄 Certificados Legales")
 
-archivo_cert ="Certificados legales.xlsx"
+archivo_cert = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\Escritorio\Control Acreditaciones Komatsu RT\Certificados legales.xlsx"
 
 xls = pd.ExcelFile(archivo_cert)
 
@@ -640,7 +538,7 @@ with st.container(border=True):
 
     st.subheader("📄 Operación de equipos")
 
-archivo_cert ="Operación equipos.xlsx"
+archivo_cert = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\Escritorio\Control Acreditaciones Komatsu RT\Operación equipos.xlsx"
 
 xls = pd.ExcelFile(archivo_cert)
 
@@ -723,43 +621,5 @@ with st.container(border=True):
         col1, col2, col3 = st.columns([5, 2, 2])
 
         col1.write(row["CURSO"])
-st.subheader("📦 Descargar QR de todos los trabajadores")
-
-if st.button("Generar QR masivo"):
-
-    BASE_URL = "https://acreditaciones-komatsu-i3nrnuq22ipz2qgisfz7rb.streamlit.app/"
-
-    zip_buffer = BytesIO()
-
-    with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-
-        for _, row in df_matriz.iterrows():
-
-            rut_limpio = str(row["RUT"]).strip().replace(".", "").upper()
-            rut_formateado = formatear_rut(rut_limpio)
-
-            nombre = row["NOMBRE COMPLETO"]
-
-            # ✅ URL con puntos
-            url = f"{BASE_URL}?rut={rut_formateado}"
-
-            qr = generar_qr_personalizado(url)
-
-            nombre_archivo = f"{nombre}_{rut_formateado}.png".replace(" ", "_")
-
-            zip_file.writestr(nombre_archivo, qr.getvalue())
-
-    zip_buffer.seek(0)
-
-    st.download_button(
-        label="⬇️ Descargar todos los QR",
-        data=zip_buffer,
-        file_name="QR_Trabajadores_Komatsu.zip",
-        mime="application/zip"
-    )
-
-		
-
-
-
+        col2.write("✅ FORMACIÓN COMPLETADA")
         
