@@ -538,7 +538,7 @@ with st.container(border=True):
 
     st.subheader("📄 Operación de equipos")
 
-archivo_cert = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\Escritorio\Control Acreditaciones Komatsu RT\Operación equipos.xlsx"
+archivo_cert = r"Operación equipos.xlsx"
 
 xls = pd.ExcelFile(archivo_cert)
 
