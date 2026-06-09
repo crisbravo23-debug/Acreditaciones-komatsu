@@ -209,7 +209,7 @@ p, span, label {
 """, unsafe_allow_html=True)
 
 ARCHIVO = "CONTROL_TOTAL.xlsx"
-ARCHIVO_MATRIZ = "Certificados.xlsx"
+ARCHIVO_MATRIZ = "Acreditaciones.xlsx"
 
 BASE_PATH = r"C:\Users\u1305913\OneDrive - Komatsu Ltd\TUTOR DE CAPACITACIÓN\CERTIFICADOS LEGALES 2026"
 
@@ -328,22 +328,6 @@ df_trab = df[df["TRABAJADOR"].str.upper() == trabajador_clean]
 rut_trabajador = str(dato(df_persona, "RUT")).strip()
 
 # ==============================
-# 📊 RESUMEN
-# ==============================
-with st.container(border=True):
-
-	df_cert = df_trab[df_trab["TIPO"] == "CERTIFICACION"]
-	df_op = df_trab[df_trab["TIPO"].str.upper().str.contains("OPERACIÓN_EQUIPOS")]
-	df_form = df_trab[df_trab["TIPO"] == "FORMACION"]
-
-	c1, c2, c3, c4 = st.columns(4)
-
-	c1.metric("📄 Certificados", len(df_cert))
-	c2.metric("🚜 Operación", len(df_op))
-	c3.metric("🎓 Formación", len(df_form))
-	c4.metric("📊 Total", len(df_trab))
-
-# ==============================
 # PERFIL
 # ==============================
 with st.container(border=True):
@@ -436,7 +420,7 @@ if not df_acred_filtrado.empty:
 df_acreditaciones = pd.DataFrame(acreditaciones)
 
 # ==============================
-# MOSTRAR EN APP
+# ✅ MOSTRAR EN APP
 # ==============================
 with st.container(border=True):
 
@@ -455,14 +439,18 @@ with st.container(border=True):
 
         col1, col2, col3 = st.columns([2,1,2])
 
-        fecha = pd.to_datetime(row["VENCIMIENTO"])
+        fecha = pd.to_datetime(row["VENCIMIENTO"], format="%d-%m-%Y", errors="coerce")
+
+        # ✅ ESTA LÍNEA SOLUCIONA TODO
+        if pd.isna(fecha):
+            continue
 
         col1.write(row["CURSO"])
         col2.write(fecha.strftime("%d-%m-%Y"))
         col3.write(estado(fecha))
 
 # ==============================
-# ✅ CERTIFICADOS
+# CERTIFICADOS
 # ==============================
 with st.container(border=True):
 
@@ -506,33 +494,38 @@ df_cert_excel = pd.DataFrame(certificados)
 # ==============================
 # ✅ MOSTRAR
 # ==============================
-with st.container(border=True):
-    if df_cert_excel.empty:
-        st.warning("⚠️ Sin certificados encontrados")
-    else:
-        col1, col2, col3 = st.columns([4,2,2])
-
-        col1.markdown("**CURSO**")
-        col2.markdown("**VENCIMIENTO**")
-        col3.markdown("**ESTADO**")
 
 with st.container(border=True):
+
+    st.markdown(
+        """
+        <style>
+            div[data-testid="stHorizontalBlock"] {
+                margin-bottom: -8px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 
     for _, row in df_cert_excel.iterrows():
 
-        col1, col2, col3 = st.columns([4,2,2])
-
-        fecha = pd.to_datetime(row["VENCIMIENTO"], errors="coerce")
+        fecha = pd.to_datetime(row["VENCIMIENTO"], format="%d-%m-%Y", errors="coerce")
 
         if pd.isna(fecha):
             continue
 
-        col1.write(row["CURSO"])
+       
+        col1, col2, col3 = st.columns([4,2,2])
+
+        col1.markdown(f"**{row['CURSO']}**")
         col2.write(fecha.strftime("%d-%m-%Y"))
         col3.write(estado(fecha))
 
+
 # ==============================
-# 2. OPERACION EQUIPO (TODOS)
+# OPERACION EQUIPO 
 # ==============================
 with st.container(border=True):
 
@@ -588,21 +581,34 @@ with st.container(border=True):
 
 with st.container(border=True):
 
+    # ✅ CSS para quitar espacios
+    st.markdown(
+        """
+        <style>
+            div[data-testid="stHorizontalBlock"] {
+                margin-bottom: -8px;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     for _, row in df_cert_excel.iterrows():
 
-        col1, col2, col3 = st.columns([4,2,2])
-
-        fecha = pd.to_datetime(row["VENCIMIENTO"], errors="coerce")
+        fecha = pd.to_datetime(row["VENCIMIENTO"], format="%d-%m-%Y", errors="coerce")
 
         if pd.isna(fecha):
             continue
 
-        col1.write(row["CURSO"])
+        col1, col2, col3 = st.columns([4,2,2])
+
+        col1.markdown(f"**{row['CURSO']}**")
         col2.write(fecha.strftime("%d-%m-%Y"))
         col3.write(estado(fecha))
 
+
 # ==============================
-# 3. FORMACION
+# FORMACION
 # ==============================
 with st.container(border=True):
 
@@ -622,4 +628,3 @@ with st.container(border=True):
 
         col1.write(row["CURSO"])
         col2.write("✅ FORMACIÓN COMPLETADA")
-        
