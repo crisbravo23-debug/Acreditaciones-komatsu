@@ -49,14 +49,14 @@ st.markdown(f"""
 }}
 
 .card-title{{
-    color:red;
+    color:white;
     font-size:24px;
     font-weight:700;
     margin-bottom:25px;
 }}
 
 .nombre{{
-    color:red;
+    color:white;
     font-size:34px;
     font-weight:700;
     margin-bottom:15px;
@@ -133,7 +133,7 @@ st.markdown("""
 /* BOTONES */
 .stButton > button{
     background:#0F3A7A;
-    color:white;
+    color:red;
     border:2px solid #2490FF;
     border-radius:12px;
 
