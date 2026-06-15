@@ -56,7 +56,7 @@ st.markdown(f"""
 }}
 
 .nombre{{
-    color:white;
+    color:red;
     font-size:34px;
     font-weight:700;
     margin-bottom:15px;
@@ -197,7 +197,7 @@ h1, h2, h3, h4 {
 }
 
 .nombre {
-    color: red !important;
+    color: white !important;
 }
 
 /* ✅ TEXTOS GENERALES */
