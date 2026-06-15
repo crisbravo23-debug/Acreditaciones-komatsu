@@ -157,7 +157,7 @@ st.markdown("""
 
 /* ✅ TEXTO GLOBAL */
 html, body {
-    color: white !important;
+    color: red !important;
 }
 
 /* ✅ TODAS LAS ETIQUETAS DE STREAMLIT */
