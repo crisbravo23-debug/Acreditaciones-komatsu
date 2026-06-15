@@ -49,7 +49,7 @@ st.markdown(f"""
 }}
 
 .card-title{{
-    color:white;
+    color:red;
     font-size:24px;
     font-weight:700;
     margin-bottom:25px;
