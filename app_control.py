@@ -133,7 +133,7 @@ st.markdown("""
 /* BOTONES */
 .stButton > button{
     background:#0F3A7A;
-    color:red;
+    color:white;
     border:2px solid #2490FF;
     border-radius:12px;
 
@@ -167,7 +167,7 @@ html, body {
 
 /* ✅ SELECTBOX */
 [data-baseweb="select"] * {
-    color: red !important;
+    color: white !important;
 }
 
 /* ✅ METRICAS */
